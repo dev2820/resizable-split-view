@@ -1,22 +1,14 @@
-import { Header } from "@repo/ui/header";
 import "./style.css";
-import typescriptLogo from "/typescript.svg";
-import { Counter } from "@repo/ui/counter";
-import { setupCounter } from "@repo/ui/setup-counter";
+import "@repo/core/style";
+import ResizableSplitView from "@repo/core";
 
 document.querySelector<HTMLDivElement>("#app")!.innerHTML = `
-  <div>
-    <a href="https://vitejs.dev" target="_blank">
-      <img src="/vite.svg" class="logo" alt="Vite logo" />
-    </a>
-    <a href="https://www.typescriptlang.org/" target="_blank">
-      <img src="${typescriptLogo}" class="logo vanilla" alt="TypeScript logo" />
-    </a>
-    ${Header({ title: "Web" })}
-    <div class="card">
-      ${Counter()}
-    </div>
+  <div id="container">
   </div>
 `;
 
-setupCounter(document.querySelector<HTMLButtonElement>("#counter")!);
+const container = document.getElementById("container")!;
+new ResizableSplitView(container, {
+  direction: "vertical",
+  initialSize: 400,
+});
