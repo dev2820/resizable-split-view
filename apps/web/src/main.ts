@@ -10,6 +10,9 @@ document.querySelector<HTMLDivElement>("#app")!.innerHTML = `
 const container = document.getElementById("container")!;
 new ResizableSplitView(container, {
   direction: "vertical",
-  initialSize: 400,
+  initialSize: 300,
+  thresholds: [50, 300, 480],
+  minSize: 50,
+  maxSize: 480,
   paneIds: ["area1", "area2"],
 });

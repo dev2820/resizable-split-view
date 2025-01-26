@@ -94,6 +94,21 @@ class ResizableSplitView {
   private onPointerUp(event: PointerEvent) {
     this.isDragging = false;
     (event.currentTarget as HTMLElement).releasePointerCapture(this.pointerId);
+
+    const { direction, thresholds = [] } = this.options;
+    const containerRect = this.container.getBoundingClientRect();
+
+    /**
+     * ease-in
+     */
+    if (direction === "horizontal") {
+      const xPos = event.clientX - containerRect.left;
+      const closestThreshold = findClosestThreshold(thresholds, xPos);
+    } else {
+      const yPos = event.clientY - containerRect.top;
+      const closestThreshold = findClosestThreshold(thresholds, yPos);
+      // ease 처리 필요
+    }
     event.preventDefault();
   }
   private applyThresholds(size: number, thresholds: number[]) {
@@ -119,3 +134,20 @@ class ResizableSplitView {
 }
 
 export default ResizableSplitView;
+
+const findClosestThreshold = (thresholds: number[], pos: number) => {
+  /**
+   * 가장 가까운 threshold를 찾는다.
+   */
+  let closest = -1;
+  let smallestGap = Infinity;
+  for (let i = 0; i < thresholds.length; i++) {
+    const gap = Math.abs(thresholds[i] - pos);
+    if (gap < smallestGap) {
+      smallestGap = gap;
+      closest = thresholds[i];
+    }
+  }
+
+  return closest;
+};
