@@ -83,8 +83,8 @@ class ResizableSplitView {
     }
 
     this.pane1!.style.flex = `0 0 ${newSize}px`;
-    this.pane2!.style.flex = "1";
     this.handle!.style.top = `${newSize}px`;
+
     event.preventDefault();
   }
 
@@ -92,7 +92,12 @@ class ResizableSplitView {
     this.isDragging = false;
     (event.currentTarget as HTMLElement).releasePointerCapture(this.pointerId);
 
-    const { direction, thresholds = [] } = this.options;
+    const {
+      direction,
+      thresholds = [],
+      maxSize = Infinity,
+      minSize = 0,
+    } = this.options;
     const containerRect = this.container.getBoundingClientRect();
 
     /**
@@ -101,11 +106,60 @@ class ResizableSplitView {
     if (direction === "horizontal") {
       const xPos = event.clientX - containerRect.left;
       const closestThreshold = findClosestThreshold(thresholds, xPos);
+      if (xPos >= maxSize || xPos <= minSize) {
+        return;
+      }
+      this.handle!.style.transition = "left 0.1s ease-in";
+      this.handle!.style.left = `${closestThreshold}px`;
+      this.pane1!.style.transition = "flex-basis 0.1s ease-in";
+      this.pane1!.style.flex = `0 0 ${closestThreshold}px`;
+
+      // 요소에 transitionend 이벤트 리스너 추가
+      this.handle!.addEventListener(
+        "transitionend",
+        (event) => {
+          (event.target as HTMLElement).style.transition = "";
+        },
+        { once: true }
+      );
+      this.pane1!.addEventListener(
+        "transitionend",
+        (event) => {
+          (event.target as HTMLElement).style.transition = "";
+        },
+        {
+          once: true,
+        }
+      );
     } else {
       const yPos = event.clientY - containerRect.top;
       const closestThreshold = findClosestThreshold(thresholds, yPos);
 
-      // ease 처리 필요
+      if (yPos >= maxSize || yPos <= minSize) {
+        return;
+      }
+      this.handle!.style.transition = "top 0.1s ease-in";
+      this.handle!.style.top = `${closestThreshold}px`;
+      this.pane1!.style.transition = "flex-basis 0.1s ease-in";
+      this.pane1!.style.flex = `0 0 ${closestThreshold}px`;
+
+      // 요소에 transitionend 이벤트 리스너 추가
+      this.handle!.addEventListener(
+        "transitionend",
+        (event) => {
+          (event.target as HTMLElement).style.transition = "";
+        },
+        { once: true }
+      );
+      this.pane1!.addEventListener(
+        "transitionend",
+        (event) => {
+          (event.target as HTMLElement).style.transition = "";
+        },
+        {
+          once: true,
+        }
+      );
     }
     event.preventDefault();
   }
