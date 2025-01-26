@@ -6,6 +6,7 @@ interface ResizableSplitViewOptions {
   maxSize?: number;
   direction: Direction;
   thresholds?: number[];
+  thresholdGuard?: number;
   paneIds: string[];
 }
 
@@ -17,6 +18,7 @@ class ResizableSplitView {
   private options: ResizableSplitViewOptions;
   private isDragging: boolean = false;
   private pointerId: number = -1;
+  private originPos: number = -1;
 
   constructor(container: HTMLElement, options: ResizableSplitViewOptions) {
     this.container = container;
@@ -63,6 +65,16 @@ class ResizableSplitView {
   private onPointerDown(event: PointerEvent) {
     this.isDragging = true;
     this.pointerId = event.pointerId;
+    const { direction } = this.options;
+    const containerRect = this.container.getBoundingClientRect();
+    const handleRect = this.handle!.getBoundingClientRect();
+    if (direction === "horizontal") {
+      const xPos = handleRect.left - containerRect.left;
+      this.originPos = xPos;
+    } else {
+      const yPos = handleRect.top - containerRect.top;
+      this.originPos = yPos;
+    }
     (event.currentTarget as HTMLElement).setPointerCapture(event.pointerId);
     event.preventDefault();
   }
@@ -97,6 +109,7 @@ class ResizableSplitView {
       thresholds = [],
       maxSize = Infinity,
       minSize = 0,
+      thresholdGuard = 30,
     } = this.options;
     const containerRect = this.container.getBoundingClientRect();
 
@@ -109,64 +122,127 @@ class ResizableSplitView {
       if (xPos >= maxSize || xPos <= minSize) {
         return;
       }
-      this.handle!.style.transition = "left 0.1s ease-in";
+      this.handle!.style.transition = "left 0.2s ease-out";
       this.handle!.style.left = `${closestThreshold}px`;
-      this.pane1!.style.transition = "flex-basis 0.1s ease-in";
+      this.pane1!.style.transition = "flex-basis 0.2s ease-out";
       this.pane1!.style.flex = `0 0 ${closestThreshold}px`;
-
-      // 요소에 transitionend 이벤트 리스너 추가
-      this.handle!.addEventListener(
-        "transitionend",
-        (event) => {
-          (event.target as HTMLElement).style.transition = "";
-        },
-        { once: true }
-      );
-      this.pane1!.addEventListener(
-        "transitionend",
-        (event) => {
-          (event.target as HTMLElement).style.transition = "";
-        },
-        {
-          once: true,
-        }
-      );
     } else {
       const yPos = event.clientY - containerRect.top;
-      const closestThreshold = findClosestThreshold(thresholds, yPos);
+      const dy = yPos - this.originPos;
+      if (Math.abs(dy) < thresholdGuard) {
+        // 가드보다 적게 움직였다면 가드 위치로 원위치
+        this.handle!.style.transition = "top 0.2s ease-out";
+        this.handle!.style.top = `${this.originPos}px`;
+        this.pane1!.style.transition = "flex-basis 0.2s ease-out";
+        this.pane1!.style.flex = `0 0 ${this.originPos}px`;
 
-      if (yPos >= maxSize || yPos <= minSize) {
-        return;
-      }
-      this.handle!.style.transition = "top 0.1s ease-in";
-      this.handle!.style.top = `${closestThreshold}px`;
-      this.pane1!.style.transition = "flex-basis 0.1s ease-in";
-      this.pane1!.style.flex = `0 0 ${closestThreshold}px`;
+        // 요소에 transitionend 이벤트 리스너 추가
+        this.handle!.addEventListener(
+          "transitionend",
+          (event) => {
+            (event.target as HTMLElement).style.transition = "";
+          },
+          { once: true }
+        );
+        this.pane1!.addEventListener(
+          "transitionend",
+          (event) => {
+            (event.target as HTMLElement).style.transition = "";
+          },
+          {
+            once: true,
+          }
+        );
+      } else {
+        // 가드보다 크게 움직였다면 다음 threshold로 이동
+        const goDown = dy > 0;
+        if (goDown) {
+          const nextThreshold = findNextThreshold(thresholds, yPos);
+          this.handle!.style.transition = "top 0.2s ease-out";
+          this.handle!.style.top = `${nextThreshold}px`;
+          this.pane1!.style.transition = "flex-basis 0.2s ease-out";
+          this.pane1!.style.flex = `0 0 ${nextThreshold}px`;
 
-      // 요소에 transitionend 이벤트 리스너 추가
-      this.handle!.addEventListener(
-        "transitionend",
-        (event) => {
-          (event.target as HTMLElement).style.transition = "";
-        },
-        { once: true }
-      );
-      this.pane1!.addEventListener(
-        "transitionend",
-        (event) => {
-          (event.target as HTMLElement).style.transition = "";
-        },
-        {
-          once: true,
+          // 요소에 transitionend 이벤트 리스너 추가
+          this.handle!.addEventListener(
+            "transitionend",
+            (event) => {
+              (event.target as HTMLElement).style.transition = "";
+            },
+            { once: true }
+          );
+          this.pane1!.addEventListener(
+            "transitionend",
+            (event) => {
+              (event.target as HTMLElement).style.transition = "";
+            },
+            {
+              once: true,
+            }
+          );
+        } else {
+          const nextThreshold = findPrevThreshold(thresholds, yPos);
+          this.handle!.style.transition = "top 0.2s ease-out";
+          this.handle!.style.top = `${nextThreshold}px`;
+          this.pane1!.style.transition = "flex-basis 0.2s ease-out";
+          this.pane1!.style.flex = `0 0 ${nextThreshold}px`;
+
+          // 요소에 transitionend 이벤트 리스너 추가
+          this.handle!.addEventListener(
+            "transitionend",
+            (event) => {
+              (event.target as HTMLElement).style.transition = "";
+            },
+            { once: true }
+          );
+          this.pane1!.addEventListener(
+            "transitionend",
+            (event) => {
+              (event.target as HTMLElement).style.transition = "";
+            },
+            {
+              once: true,
+            }
+          );
         }
-      );
+      }
     }
+
     event.preventDefault();
+    this.originPos = -1;
   }
 }
 
 export default ResizableSplitView;
 
+const findPrevThreshold = (thresholds: number[], pos: number) => {
+  /**
+   * 다음 threshold를 찾는다.
+   */
+  let prev = -1;
+  for (let i = thresholds.length; i >= 0; i--) {
+    if (pos > thresholds[i]) {
+      prev = thresholds[i];
+      break;
+    }
+  }
+
+  return prev;
+};
+const findNextThreshold = (thresholds: number[], pos: number) => {
+  /**
+   * 다음 threshold를 찾는다.
+   */
+  let next = -1;
+  for (let i = 0; i < thresholds.length; i++) {
+    if (pos < thresholds[i]) {
+      next = thresholds[i];
+      break;
+    }
+  }
+
+  return next;
+};
 const findClosestThreshold = (thresholds: number[], pos: number) => {
   /**
    * 가장 가까운 threshold를 찾는다.
