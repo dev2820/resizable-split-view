@@ -11,4 +11,5 @@ const container = document.getElementById("container")!;
 new ResizableSplitView(container, {
   direction: "vertical",
   initialSize: 400,
+  paneIds: ["area1", "area2"],
 });

@@ -6,6 +6,7 @@ interface ResizableSplitViewOptions {
   maxSize?: number;
   direction: Direction;
   thresholds?: number[];
+  paneIds: string[];
 }
 
 class ResizableSplitView {
@@ -15,6 +16,7 @@ class ResizableSplitView {
   private handle: HTMLElement | undefined;
   private options: ResizableSplitViewOptions;
   private isDragging: boolean = false;
+  private pointerId: number = -1;
 
   constructor(container: HTMLElement, options: ResizableSplitViewOptions) {
     this.container = container;
@@ -36,11 +38,14 @@ class ResizableSplitView {
 
     this.pane1.classList.add("resizable-split-view__pane1");
     this.pane2.classList.add("resizable-split-view__pane2");
+    this.pane1.id = this.options.paneIds[0];
+    this.pane2.id = this.options.paneIds[1];
     this.pane1.style.flex = `0 0 ${this.options.initialSize}px`;
     this.pane2.style.flex = "1";
 
     this.handle.classList.add("resizable-split-view__handler");
     this.handle.classList.add(isHorizontal ? "pos-horizontal" : "pos-vertical");
+    this.handle!.style.top = `${this.options.initialSize}px`;
     this.handle.style.cursor = isHorizontal ? "col-resize" : "row-resize";
     this.container.style.flexDirection = isHorizontal ? "row" : "column";
 
@@ -50,17 +55,19 @@ class ResizableSplitView {
   }
 
   private handleEvents() {
-    this.handle?.addEventListener("mousedown", this.onDragStart.bind(this));
-    this.container.addEventListener("mousemove", this.onDragMove.bind(this));
-    this.container.addEventListener("mouseup", this.onDragEnd.bind(this));
+    this.handle?.addEventListener("pointerdown", this.onPointerDown.bind(this));
+    this.handle?.addEventListener("pointermove", this.onPointerMove.bind(this));
+    this.handle?.addEventListener("pointerup", this.onPointerUp.bind(this));
   }
 
-  private onDragStart(event: MouseEvent) {
+  private onPointerDown(event: PointerEvent) {
     this.isDragging = true;
+    this.pointerId = event.pointerId;
+    (event.currentTarget as HTMLElement).setPointerCapture(event.pointerId);
     event.preventDefault();
   }
 
-  private onDragMove(event: MouseEvent) {
+  private onPointerMove(event: PointerEvent) {
     if (!this.isDragging) return;
 
     const {
@@ -81,12 +88,14 @@ class ResizableSplitView {
     }
 
     this.applyThresholds(newSize, thresholds);
+    event.preventDefault();
   }
 
-  private onDragEnd() {
+  private onPointerUp(event: PointerEvent) {
     this.isDragging = false;
+    (event.currentTarget as HTMLElement).releasePointerCapture(this.pointerId);
+    event.preventDefault();
   }
-
   private applyThresholds(size: number, thresholds: number[]) {
     if (!this.pane1 || !this.pane2) {
       throw new Error("ResizableSplitView: init ResizableSplitView first");

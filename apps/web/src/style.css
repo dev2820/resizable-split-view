@@ -30,6 +30,7 @@ body {
   place-items: center;
   min-width: 320px;
   min-height: 100vh;
+  touch-action: none; /* 배경이 움직이지 않게 해줌 */
 }
 
 h1 {
@@ -100,4 +101,11 @@ button:focus-visible {
   width: 400px;
   height: 600px;
   background: #dddddd;
+}
+
+#area1 {
+  background: oklch(0.623 0.214 259.815);
+}
+#area2 {
+  background: oklch(0.637 0.237 25.331);
 }
