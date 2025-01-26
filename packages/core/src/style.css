@@ -5,7 +5,7 @@
 
 .resizable-split-view__pane1,
 .resizable-split-view__pane2 {
-  will-change: transform;
+  /* transition: flex-basis 0.3s ease-in; */
 }
 
 .resizable-split-view__handler {
@@ -14,6 +14,7 @@
   height: 10px;
   border-radius: 999px;
   background: #999999;
+  will-change: transform;
 }
 
 .resizable-split-view__handler.pos-vertical {

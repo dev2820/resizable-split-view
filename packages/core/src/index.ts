@@ -70,12 +70,7 @@ class ResizableSplitView {
   private onPointerMove(event: PointerEvent) {
     if (!this.isDragging) return;
 
-    const {
-      direction,
-      minSize = 0,
-      maxSize = Infinity,
-      thresholds = [],
-    } = this.options;
+    const { direction, minSize = 0, maxSize = Infinity } = this.options;
     const containerRect = this.container.getBoundingClientRect();
     let newSize: number;
 
@@ -87,7 +82,9 @@ class ResizableSplitView {
       newSize = Math.max(minSize, Math.min(yPos, maxSize));
     }
 
-    this.applyThresholds(newSize, thresholds);
+    this.pane1!.style.flex = `0 0 ${newSize}px`;
+    this.pane2!.style.flex = "1";
+    this.handle!.style.top = `${newSize}px`;
     event.preventDefault();
   }
 
@@ -107,29 +104,10 @@ class ResizableSplitView {
     } else {
       const yPos = event.clientY - containerRect.top;
       const closestThreshold = findClosestThreshold(thresholds, yPos);
+
       // ease 처리 필요
     }
     event.preventDefault();
-  }
-  private applyThresholds(size: number, thresholds: number[]) {
-    if (!this.pane1 || !this.pane2) {
-      throw new Error("ResizableSplitView: init ResizableSplitView first");
-    }
-    const { minSize = 0 } = this.options;
-
-    // Threshold를 순회하면서 크기를 조정
-    for (const threshold of thresholds) {
-      if (size < threshold) {
-        size = minSize;
-        break;
-      } else if (size >= threshold) {
-        size = threshold;
-      }
-    }
-
-    this.pane1.style.flex = `0 0 ${size}px`;
-    this.pane2.style.flex = "1";
-    this.handle!.style.top = `${size}px`;
   }
 }
 
