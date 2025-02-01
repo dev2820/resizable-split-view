@@ -5,8 +5,7 @@
   "type": "module",
   "main": "./dist/index.js",
   "exports": {
-    ".": "./src/index.ts",
-    "./style": "./src/style.css"
+    ".": "./src/index.ts"
   },
   "scripts": {
     "dev": "tsc --watch",
