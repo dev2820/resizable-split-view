@@ -1,5 +1,4 @@
 import "./style.css";
-import "@repo/core/style";
 import ResizableSplitView from "@repo/core";
 
 document.querySelector<HTMLDivElement>("#app")!.innerHTML = `

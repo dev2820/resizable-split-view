@@ -47,6 +47,8 @@ class ResizableSplitView {
     this.pane1.style.flex = `0 0 ${this.options.initialSize}px`;
     this.pane2.style.flex = "1";
 
+    this.container.style.display = "flex";
+    this.container.style.position = "relative";
     this.container.style.flexDirection = isHorizontal ? "row" : "column";
     this.originSize = this.size = this.options.initialSize;
     this.handleEvents();
