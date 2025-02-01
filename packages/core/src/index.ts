@@ -156,6 +156,20 @@ class ResizableSplitView {
     const alpha = 1.2; // 가변률
     return change * alpha;
   }
+  destroy() {
+    this.container?.removeEventListener(
+      "pointerdown",
+      this.onPointerDown.bind(this)
+    );
+    this.container?.removeEventListener(
+      "pointermove",
+      this.onPointerMove.bind(this)
+    );
+    this.container?.removeEventListener(
+      "pointerup",
+      this.onPointerUp.bind(this)
+    );
+  }
 }
 
 export default ResizableSplitView;
