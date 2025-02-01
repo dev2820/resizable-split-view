@@ -35,9 +35,6 @@ class ResizableSplitView {
     this.pane1 = document.getElementById(this.options.paneIds[0])!;
     this.pane2 = document.getElementById(this.options.paneIds[1])!;
 
-    this.container.appendChild(this.pane1);
-    this.container.appendChild(this.pane2);
-
     this.pane1.classList.add("resizable-split-view__pane1");
     this.pane2.classList.add("resizable-split-view__pane2");
     this.pane1.id = this.options.paneIds[0];
