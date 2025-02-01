@@ -1,5 +1,3 @@
-import { clamp } from "./utils/clamp";
-
 type Direction = "horizontal" | "vertical";
 
 export interface ResizableSplitViewOptions {
@@ -197,4 +195,8 @@ const findNextThreshold = (thresholds: number[], pos: number) => {
   }
 
   return thresholds[thresholds.length - 1];
+};
+
+const clamp = (min = -Infinity, max = Infinity, value: number) => {
+  return Math.max(Math.min(value, max), min);
 };

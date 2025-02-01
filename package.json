@@ -1,6 +1,6 @@
 {
   "name": "resizable-split-view",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "files": [
     "./packages/react/dist/**/*",
     "LICENSE",
@@ -18,6 +18,10 @@
       "import": {
         "types": "./packages/react/dist/index.d.ts",
         "default": "./packages/react/dist/index.js"
+      },
+      "require": {
+        "types": "./packages/react/dist/index.d.cts",
+        "default": "./packages/react/dist/index.cjs"
       }
     }
   },
