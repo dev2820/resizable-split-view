@@ -1,0 +1,15 @@
+{
+  "extends": "@repo/typescript-config/base.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "rootDir": "./src",
+    "target": "ESNext",
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+
+    "useDefineForClassFields": true,
+    "skipLibCheck": true,
+
+    "jsx": "react-jsx"
+  },
+  "include": ["src"]
+}

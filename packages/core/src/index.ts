@@ -2,7 +2,7 @@ import { clamp } from "./utils/clamp";
 
 type Direction = "horizontal" | "vertical";
 
-interface ResizableSplitViewOptions {
+export interface ResizableSplitViewOptions {
   initialSize: number;
   minSize?: number;
   maxSize?: number;
