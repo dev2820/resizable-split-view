@@ -71,20 +71,17 @@ class ResizableSplitView {
   private onPointerDown(event: PointerEvent) {
     this.isDragging = true;
     this.pointerId = event.pointerId;
+    this.container.setPointerCapture(this.pointerId);
+
     const { clientX: pointerX, clientY: pointerY } = event;
     const { direction } = this.options;
-    // const containerRect = this.container.getBoundingClientRect();
 
     if (direction === "horizontal") {
-      // const xPos = Math.max(pointerX - containerRect.left, 0);
       this.startPos = pointerX;
     } else {
-      // const yPos = Math.max(pointerY - containerRect.top, 0);
       this.startPos = pointerY;
     }
     this.currentPos = this.startPos;
-
-    (event.currentTarget as HTMLElement).setPointerCapture(event.pointerId);
     event.preventDefault();
   }
 
@@ -92,13 +89,14 @@ class ResizableSplitView {
     if (!this.isDragging) return;
 
     const { direction, minSize = 0, maxSize = Infinity } = this.options;
-    // const containerRect = this.container.getBoundingClientRect();
+    const { clientX: pointerX, clientY: pointerY } = event;
 
     if (direction === "horizontal") {
-      this.currentPos = event.clientX;
+      this.currentPos = pointerX;
     } else {
-      this.currentPos = event.clientY;
+      this.currentPos = pointerY;
     }
+
     const diff = this.currentPos - this.startPos;
     this.size = clamp(
       minSize,
@@ -106,14 +104,13 @@ class ResizableSplitView {
       this.originSize + this.changeToPx(diff)
     );
 
-    this.pane1!.style.flex = `0 0 ${this.size}px`;
-
+    this.changeSizeOfPane1Force(this.size);
     event.preventDefault();
   }
 
   private onPointerUp(event: PointerEvent) {
     this.isDragging = false;
-    (event.currentTarget as HTMLElement).releasePointerCapture(this.pointerId);
+    this.container.releasePointerCapture(this.pointerId);
 
     const { thresholds = [], thresholdGuard = 30 } = this.options;
 
@@ -123,7 +120,7 @@ class ResizableSplitView {
     const diff = this.currentPos - this.startPos;
     const d = Math.abs(diff);
     if (d < thresholdGuard) {
-      this.changeSizeOfPane1(this.originSize);
+      this.changeSizeOfPane1WithAnimation(this.originSize);
     } else {
       // 가드보다 크게 움직였다면 다음 threshold로 이동
       const nextThreshold =
@@ -131,14 +128,14 @@ class ResizableSplitView {
           ? findNextThreshold(thresholds, this.size)
           : findPrevThreshold(thresholds, this.size);
 
-      this.changeSizeOfPane1(nextThreshold!);
+      this.changeSizeOfPane1WithAnimation(nextThreshold!);
       this.originSize = nextThreshold!;
     }
 
     event.preventDefault();
   }
 
-  changeSizeOfPane1(to: number) {
+  changeSizeOfPane1WithAnimation(to: number) {
     this.pane1!.style.transition = "flex-basis 0.15s ease-out";
     this.pane1!.style.flex = `0 0 ${to}px`;
     // 요소에 transitionend 이벤트 리스너 추가
@@ -151,6 +148,9 @@ class ResizableSplitView {
         once: true,
       }
     );
+  }
+  changeSizeOfPane1Force(to: number) {
+    this.pane1!.style.flex = `0 0 ${to}px`;
   }
   changeToPx(change: number) {
     const alpha = 1.2; // 가변률
