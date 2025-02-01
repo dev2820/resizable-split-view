@@ -12,7 +12,7 @@
     "dev": "turbo dev",
     "lint": "turbo lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
-    "release:patch": "turbo release:patch --filter=@repo/react"
+    "release:patch": "pnpm build && pnpm version patch && pnpm publish"
   },
   "exports": {
     "./react": {

@@ -10,8 +10,7 @@
   },
   "scripts": {
     "dev": "tsc --watch",
-    "build": "tsup --external react --external react-dom",
-    "release:patch": "pnpm build && pnpm version patch && pnpm publish"
+    "build": "tsup --external react --external react-dom"
   },
   "keywords": [],
   "author": "",
