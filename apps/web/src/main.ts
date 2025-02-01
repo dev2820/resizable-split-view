@@ -3,6 +3,8 @@ import ResizableSplitView from "@repo/core";
 
 document.querySelector<HTMLDivElement>("#app")!.innerHTML = `
   <div id="container">
+    <div id="area1">pane1</div>
+    <div id="area2">pane2</div>
   </div>
 `;
 

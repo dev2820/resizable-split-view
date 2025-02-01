@@ -34,8 +34,8 @@ class ResizableSplitView {
     const isHorizontal = this.options.direction === "horizontal";
     this.container.classList.add("resizable-split-view__container");
     // Pane과 Handle element를 만들고 스타일을 초기화
-    this.pane1 = document.createElement("div");
-    this.pane2 = document.createElement("div");
+    this.pane1 = document.getElementById(this.options.paneIds[0])!;
+    this.pane2 = document.getElementById(this.options.paneIds[1])!;
 
     this.container.appendChild(this.pane1);
     this.container.appendChild(this.pane2);
@@ -170,7 +170,7 @@ const findPrevThreshold = (thresholds: number[], pos: number) => {
     }
   }
 
-  return thresholds.at(0);
+  return thresholds[0];
 };
 const findNextThreshold = (thresholds: number[], pos: number) => {
   /**
@@ -182,5 +182,5 @@ const findNextThreshold = (thresholds: number[], pos: number) => {
     }
   }
 
-  return thresholds.at(-1);
+  return thresholds[thresholds.length - 1];
 };
