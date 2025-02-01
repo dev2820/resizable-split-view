@@ -115,60 +115,43 @@ class ResizableSplitView {
     this.isDragging = false;
     (event.currentTarget as HTMLElement).releasePointerCapture(this.pointerId);
 
-    const { direction, thresholds = [], thresholdGuard = 30 } = this.options;
+    const { thresholds = [], thresholdGuard = 30 } = this.options;
 
     /**
      * ease-in
      */
-    if (direction === "horizontal") {
-      const closestThreshold = findClosestThreshold(thresholds, this.size);
-
-      this.pane1!.style.transition = "flex-basis 0.2s ease-out";
-      this.pane1!.style.flex = `0 0 ${closestThreshold}px`;
+    const diff = this.currentPos - this.startPos;
+    const d = Math.abs(diff);
+    if (d < thresholdGuard) {
+      this.changeSizeOfPane1(this.originSize);
     } else {
-      const diff = this.currentPos - this.startPos;
-      const dy = Math.abs(diff);
-      if (Math.abs(dy) < thresholdGuard) {
-        // 가드보다 적게 움직였다면 가드 위치로 원위치
-        this.pane1!.style.transition = "flex-basis 0.2s ease-out";
-        this.pane1!.style.flex = `0 0 ${this.originSize}px`;
+      // 가드보다 크게 움직였다면 다음 threshold로 이동
+      const nextThreshold =
+        diff > 0
+          ? findNextThreshold(thresholds, this.size)
+          : findPrevThreshold(thresholds, this.size);
 
-        // 요소에 transitionend 이벤트 리스너 추가
-        this.pane1!.addEventListener(
-          "transitionend",
-          (event) => {
-            (event.target as HTMLElement).style.transition = "";
-          },
-          {
-            once: true,
-          }
-        );
-      } else {
-        // 가드보다 크게 움직였다면 다음 threshold로 이동
-        const nextThreshold =
-          diff > 0
-            ? findNextThreshold(thresholds, this.size)
-            : findPrevThreshold(thresholds, this.size);
-
-        this.pane1!.style.transition = "flex-basis 0.2s ease-out";
-        this.pane1!.style.flex = `0 0 ${nextThreshold}px`;
-        this.originSize = nextThreshold;
-        // 요소에 transitionend 이벤트 리스너 추가
-        this.pane1!.addEventListener(
-          "transitionend",
-          (event) => {
-            (event.target as HTMLElement).style.transition = "";
-          },
-          {
-            once: true,
-          }
-        );
-      }
+      this.changeSizeOfPane1(nextThreshold!);
+      this.originSize = nextThreshold!;
     }
 
     event.preventDefault();
   }
 
+  changeSizeOfPane1(to: number) {
+    this.pane1!.style.transition = "flex-basis 0.15s ease-out";
+    this.pane1!.style.flex = `0 0 ${to}px`;
+    // 요소에 transitionend 이벤트 리스너 추가
+    this.pane1!.addEventListener(
+      "transitionend",
+      (event) => {
+        (event.target as HTMLElement).style.transition = "";
+      },
+      {
+        once: true,
+      }
+    );
+  }
   changeToPx(change: number) {
     const alpha = 1.2; // 가변률
     return change * alpha;
@@ -179,45 +162,25 @@ export default ResizableSplitView;
 
 const findPrevThreshold = (thresholds: number[], pos: number) => {
   /**
-   * 다음 threshold를 찾는다.
+   * 이전 threshold를 찾는다.
    */
-  let prev = -1;
   for (let i = thresholds.length; i >= 0; i--) {
     if (pos > thresholds[i]) {
-      prev = thresholds[i];
-      break;
+      return thresholds[i];
     }
   }
 
-  return prev;
+  return thresholds.at(0);
 };
 const findNextThreshold = (thresholds: number[], pos: number) => {
   /**
    * 다음 threshold를 찾는다.
    */
-  let next = -1;
   for (let i = 0; i < thresholds.length; i++) {
     if (pos < thresholds[i]) {
-      next = thresholds[i];
-      break;
+      return thresholds[i];
     }
   }
 
-  return next;
-};
-const findClosestThreshold = (thresholds: number[], pos: number) => {
-  /**
-   * 가장 가까운 threshold를 찾는다.
-   */
-  let closest = -1;
-  let smallestGap = Infinity;
-  for (let i = 0; i < thresholds.length; i++) {
-    const gap = Math.abs(thresholds[i] - pos);
-    if (gap < smallestGap) {
-      smallestGap = gap;
-      closest = thresholds[i];
-    }
-  }
-
-  return closest;
+  return thresholds.at(-1);
 };
