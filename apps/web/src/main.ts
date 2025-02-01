@@ -12,7 +12,7 @@ new ResizableSplitView(container, {
   direction: "vertical",
   initialSize: 300,
   thresholds: [50, 300, 480],
-  thresholdGuard: 50,
+  thresholdGuard: 30,
   minSize: 50,
   maxSize: 480,
   paneIds: ["area1", "area2"],

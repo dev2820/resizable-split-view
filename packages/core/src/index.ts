@@ -1,3 +1,5 @@
+import { clamp } from "./utils/clamp";
+
 type Direction = "horizontal" | "vertical";
 
 interface ResizableSplitViewOptions {
@@ -14,11 +16,14 @@ class ResizableSplitView {
   private container: HTMLElement;
   private pane1: HTMLElement | undefined;
   private pane2: HTMLElement | undefined;
-  private handle: HTMLElement | undefined;
   private options: ResizableSplitViewOptions;
   private isDragging: boolean = false;
   private pointerId: number = -1;
-  private originPos: number = -1;
+  private originPos: number = -1; // 변화 생기기 전 원래 위치
+  private startPos: number = -1; // 변화가 시작할 때 포인터의 위치
+  private currentPos: number = -1; // 변화중인 포인터의 위치
+  private originSize: number = 0; // pane1의 실제 사이즈 (px)
+  private size: number = 0; // pane1의 실제 사이즈 (px)
 
   constructor(container: HTMLElement, options: ResizableSplitViewOptions) {
     this.container = container;
@@ -32,11 +37,9 @@ class ResizableSplitView {
     // Pane과 Handle element를 만들고 스타일을 초기화
     this.pane1 = document.createElement("div");
     this.pane2 = document.createElement("div");
-    this.handle = document.createElement("div");
 
     this.container.appendChild(this.pane1);
     this.container.appendChild(this.pane2);
-    this.container.appendChild(this.handle);
 
     this.pane1.classList.add("resizable-split-view__pane1");
     this.pane2.classList.add("resizable-split-view__pane2");
@@ -45,36 +48,41 @@ class ResizableSplitView {
     this.pane1.style.flex = `0 0 ${this.options.initialSize}px`;
     this.pane2.style.flex = "1";
 
-    this.handle.classList.add("resizable-split-view__handler");
-    this.handle.classList.add(isHorizontal ? "pos-horizontal" : "pos-vertical");
-    this.handle!.style.top = `${this.options.initialSize}px`;
-    this.handle.style.cursor = isHorizontal ? "col-resize" : "row-resize";
     this.container.style.flexDirection = isHorizontal ? "row" : "column";
-
+    this.originSize = this.size = this.options.initialSize;
     this.handleEvents();
 
     return this;
   }
 
   private handleEvents() {
-    this.handle?.addEventListener("pointerdown", this.onPointerDown.bind(this));
-    this.handle?.addEventListener("pointermove", this.onPointerMove.bind(this));
-    this.handle?.addEventListener("pointerup", this.onPointerUp.bind(this));
+    this.container?.addEventListener(
+      "pointerdown",
+      this.onPointerDown.bind(this)
+    );
+    this.container?.addEventListener(
+      "pointermove",
+      this.onPointerMove.bind(this)
+    );
+    this.container?.addEventListener("pointerup", this.onPointerUp.bind(this));
   }
 
   private onPointerDown(event: PointerEvent) {
     this.isDragging = true;
     this.pointerId = event.pointerId;
+    const { clientX: pointerX, clientY: pointerY } = event;
     const { direction } = this.options;
-    const containerRect = this.container.getBoundingClientRect();
-    const handleRect = this.handle!.getBoundingClientRect();
+    // const containerRect = this.container.getBoundingClientRect();
+
     if (direction === "horizontal") {
-      const xPos = handleRect.left - containerRect.left;
-      this.originPos = xPos;
+      // const xPos = Math.max(pointerX - containerRect.left, 0);
+      this.startPos = pointerX;
     } else {
-      const yPos = handleRect.top - containerRect.top;
-      this.originPos = yPos;
+      // const yPos = Math.max(pointerY - containerRect.top, 0);
+      this.startPos = pointerY;
     }
+    this.currentPos = this.startPos;
+
     (event.currentTarget as HTMLElement).setPointerCapture(event.pointerId);
     event.preventDefault();
   }
@@ -83,19 +91,21 @@ class ResizableSplitView {
     if (!this.isDragging) return;
 
     const { direction, minSize = 0, maxSize = Infinity } = this.options;
-    const containerRect = this.container.getBoundingClientRect();
-    let newSize: number;
+    // const containerRect = this.container.getBoundingClientRect();
 
     if (direction === "horizontal") {
-      const xPos = event.clientX - containerRect.left;
-      newSize = Math.max(minSize, Math.min(xPos, maxSize));
+      this.currentPos = event.clientX;
     } else {
-      const yPos = event.clientY - containerRect.top;
-      newSize = Math.max(minSize, Math.min(yPos, maxSize));
+      this.currentPos = event.clientY;
     }
+    const diff = this.currentPos - this.startPos;
+    this.size = clamp(
+      minSize,
+      maxSize,
+      this.originSize + this.changeToPx(diff)
+    );
 
-    this.pane1!.style.flex = `0 0 ${newSize}px`;
-    this.handle!.style.top = `${newSize}px`;
+    this.pane1!.style.flex = `0 0 ${this.size}px`;
 
     event.preventDefault();
   }
@@ -104,46 +114,25 @@ class ResizableSplitView {
     this.isDragging = false;
     (event.currentTarget as HTMLElement).releasePointerCapture(this.pointerId);
 
-    const {
-      direction,
-      thresholds = [],
-      maxSize = Infinity,
-      minSize = 0,
-      thresholdGuard = 30,
-    } = this.options;
-    const containerRect = this.container.getBoundingClientRect();
+    const { direction, thresholds = [], thresholdGuard = 30 } = this.options;
 
     /**
      * ease-in
      */
     if (direction === "horizontal") {
-      const xPos = event.clientX - containerRect.left;
-      const closestThreshold = findClosestThreshold(thresholds, xPos);
-      if (xPos >= maxSize || xPos <= minSize) {
-        return;
-      }
-      this.handle!.style.transition = "left 0.2s ease-out";
-      this.handle!.style.left = `${closestThreshold}px`;
+      const closestThreshold = findClosestThreshold(thresholds, this.size);
+
       this.pane1!.style.transition = "flex-basis 0.2s ease-out";
       this.pane1!.style.flex = `0 0 ${closestThreshold}px`;
     } else {
-      const yPos = event.clientY - containerRect.top;
-      const dy = yPos - this.originPos;
+      const diff = this.currentPos - this.startPos;
+      const dy = Math.abs(diff);
       if (Math.abs(dy) < thresholdGuard) {
         // 가드보다 적게 움직였다면 가드 위치로 원위치
-        this.handle!.style.transition = "top 0.2s ease-out";
-        this.handle!.style.top = `${this.originPos}px`;
         this.pane1!.style.transition = "flex-basis 0.2s ease-out";
-        this.pane1!.style.flex = `0 0 ${this.originPos}px`;
+        this.pane1!.style.flex = `0 0 ${this.originSize}px`;
 
         // 요소에 transitionend 이벤트 리스너 추가
-        this.handle!.addEventListener(
-          "transitionend",
-          (event) => {
-            (event.target as HTMLElement).style.transition = "";
-          },
-          { once: true }
-        );
         this.pane1!.addEventListener(
           "transitionend",
           (event) => {
@@ -155,61 +144,34 @@ class ResizableSplitView {
         );
       } else {
         // 가드보다 크게 움직였다면 다음 threshold로 이동
-        const goDown = dy > 0;
-        if (goDown) {
-          const nextThreshold = findNextThreshold(thresholds, yPos);
-          this.handle!.style.transition = "top 0.2s ease-out";
-          this.handle!.style.top = `${nextThreshold}px`;
-          this.pane1!.style.transition = "flex-basis 0.2s ease-out";
-          this.pane1!.style.flex = `0 0 ${nextThreshold}px`;
+        const nextThreshold =
+          diff > 0
+            ? findNextThreshold(thresholds, this.size)
+            : findPrevThreshold(thresholds, this.size);
 
-          // 요소에 transitionend 이벤트 리스너 추가
-          this.handle!.addEventListener(
-            "transitionend",
-            (event) => {
-              (event.target as HTMLElement).style.transition = "";
-            },
-            { once: true }
-          );
-          this.pane1!.addEventListener(
-            "transitionend",
-            (event) => {
-              (event.target as HTMLElement).style.transition = "";
-            },
-            {
-              once: true,
-            }
-          );
-        } else {
-          const nextThreshold = findPrevThreshold(thresholds, yPos);
-          this.handle!.style.transition = "top 0.2s ease-out";
-          this.handle!.style.top = `${nextThreshold}px`;
-          this.pane1!.style.transition = "flex-basis 0.2s ease-out";
-          this.pane1!.style.flex = `0 0 ${nextThreshold}px`;
-
-          // 요소에 transitionend 이벤트 리스너 추가
-          this.handle!.addEventListener(
-            "transitionend",
-            (event) => {
-              (event.target as HTMLElement).style.transition = "";
-            },
-            { once: true }
-          );
-          this.pane1!.addEventListener(
-            "transitionend",
-            (event) => {
-              (event.target as HTMLElement).style.transition = "";
-            },
-            {
-              once: true,
-            }
-          );
-        }
+        this.pane1!.style.transition = "flex-basis 0.2s ease-out";
+        this.pane1!.style.flex = `0 0 ${nextThreshold}px`;
+        this.originSize = nextThreshold;
+        // 요소에 transitionend 이벤트 리스너 추가
+        this.pane1!.addEventListener(
+          "transitionend",
+          (event) => {
+            (event.target as HTMLElement).style.transition = "";
+          },
+          {
+            once: true,
+          }
+        );
       }
     }
 
     event.preventDefault();
     this.originPos = -1;
+  }
+
+  changeToPx(change: number) {
+    const alpha = 1.2; // 가변률
+    return change * alpha;
   }
 }
 
