@@ -1,11 +1,12 @@
 {
   "name": "resizable-split-view",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "files": [
     "./packages/react/dist/**/*",
     "LICENSE",
     "README.md"
   ],
+  "type": "module",
   "scripts": {
     "build": "turbo build",
     "dev": "turbo dev",
@@ -14,7 +15,7 @@
   },
   "exports": {
     "./react": {
-      "source": "./packages/react/src/index.ts",
+      "source": "./packages/react/src/index.tsx",
       "import": {
         "types": "./packages/react/dist/index.d.ts",
         "default": "./packages/react/dist/index.js"
