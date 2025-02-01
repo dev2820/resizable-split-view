@@ -19,7 +19,6 @@ class ResizableSplitView {
   private options: ResizableSplitViewOptions;
   private isDragging: boolean = false;
   private pointerId: number = -1;
-  private originPos: number = -1; // 변화 생기기 전 원래 위치
   private startPos: number = -1; // 변화가 시작할 때 포인터의 위치
   private currentPos: number = -1; // 변화중인 포인터의 위치
   private originSize: number = 0; // pane1의 실제 사이즈 (px)
@@ -166,7 +165,6 @@ class ResizableSplitView {
     }
 
     event.preventDefault();
-    this.originPos = -1;
   }
 
   changeToPx(change: number) {
