@@ -1,6 +1,6 @@
 {
   "name": "@repo/react",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "",
   "type": "module",
   "main": "./dist/index.js",
@@ -10,7 +10,8 @@
   },
   "scripts": {
     "dev": "tsc --watch",
-    "build": "tsup --external react --external react-dom"
+    "build": "tsup --external react --external react-dom",
+    "publish:patch": "pnpm build && pnpm version patch && pnpm publish"
   },
   "keywords": [],
   "author": "",

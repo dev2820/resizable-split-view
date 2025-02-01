@@ -30,13 +30,10 @@ class ResizableSplitView {
 
   private init() {
     const isHorizontal = this.options.direction === "horizontal";
-    this.container.classList.add("resizable-split-view__container");
     // Pane과 Handle element를 만들고 스타일을 초기화
     this.pane1 = document.getElementById(this.options.paneIds[0])!;
     this.pane2 = document.getElementById(this.options.paneIds[1])!;
 
-    this.pane1.classList.add("resizable-split-view__pane1");
-    this.pane2.classList.add("resizable-split-view__pane2");
     this.pane1.id = this.options.paneIds[0];
     this.pane2.id = this.options.paneIds[1];
     this.pane1.style.flex = `0 0 ${this.options.initialSize}px`;

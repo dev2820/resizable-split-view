@@ -1,6 +1,6 @@
 {
   "name": "resizable-split-view",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "files": [
     "./packages/react/dist/**/*",
     "LICENSE",
@@ -11,7 +11,8 @@
     "build": "turbo build",
     "dev": "turbo dev",
     "lint": "turbo lint",
-    "format": "prettier --write \"**/*.{ts,tsx,md}\""
+    "format": "prettier --write \"**/*.{ts,tsx,md}\"",
+    "publish:patch": "turbo publish:patch --filter=@repo/react"
   },
   "exports": {
     "./react": {
