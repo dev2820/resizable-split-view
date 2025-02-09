@@ -37,7 +37,10 @@ class ResizableSplitView {
     this.pane1.id = this.options.paneIds[0];
     this.pane2.id = this.options.paneIds[1];
     this.pane1.style.flex = `0 0 ${this.options.initialSize}px`;
-    this.pane1.style.setProperty("--size", String(this.options.initialSize));
+    this.pane1.style.setProperty(
+      "--size",
+      String(this.options.initialSize) + "px"
+    );
     this.pane2.style.flex = "1";
 
     this.container.style.display = "flex";
@@ -129,9 +132,10 @@ class ResizableSplitView {
   }
 
   changeSizeOfPane1WithAnimation(to: number) {
+    const value = String(parseFloat(to.toFixed(3)));
     this.pane1!.style.transition = "flex-basis 0.15s ease-out";
-    this.pane1!.style.flex = `0 0 ${to}px`;
-    this.pane1?.style.setProperty("--size", String(to));
+    this.pane1!.style.flex = `0 0 ${value}px`;
+    this.pane1!.style.setProperty("--size", value + "px");
 
     // 요소에 transitionend 이벤트 리스너 추가
     this.pane1!.addEventListener(
@@ -145,8 +149,9 @@ class ResizableSplitView {
     );
   }
   changeSizeOfPane1Force(to: number) {
-    this.pane1!.style.flex = `0 0 ${to}px`;
-    this.pane1?.style.setProperty("--size", String(to));
+    const value = String(parseFloat(to.toFixed(3)));
+    this.pane1!.style.flex = `0 0 ${value}px`;
+    this.pane1?.style.setProperty("--size", value + "px");
   }
   changeToPx(change: number) {
     const alpha = 1.2; // 가변률
