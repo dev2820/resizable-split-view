@@ -2,7 +2,10 @@ name: PR Title Updater
 
 on:
   pull_request:
-    types: [opened, edited]
+    types: [opened]
+
+permissions:
+  pull-requests: write # PR 수정 권한 부여
 
 jobs:
   update-pr-title:
